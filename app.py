@@ -6,7 +6,7 @@ import json
 import stripe
 
 app = Flask(__name__)
-stripe.api_key = 'sk_test_51O57hNSIvsFPoooMQ2ZOZwOyg3QjWrSDMaq69nVO5oJM011vvULrwWuz4Up3btzC7XtvahalG4ESL4CUylqRP4ZX00Uyp6zzMW'
+stripe.api_key = 'YOUR KEY'
 
 cap = cv2.VideoCapture(0)
 cap.set(3, 320)
