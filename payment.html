@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Payment Page</title>
+    <style>
+      /* styles.css */
+      body {
+        background-color: #222; /* Dark background */
+        color: #fff;
+      }
+
+      .popup {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+      }
+
+      .popup-content {
+        background-color: #fff;
+        width: 80%;
+        max-width: 400px;
+        margin: 20% auto;
+        padding: 20px;
+        text-align: center;
+        position: relative;
+      }
+
+      .close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 24px;
+        cursor: pointer;
+      }
+
+      .payment-form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        width: 80%;
+        max-width: 300px;
+        margin: 10px 0;
+      }
+
+      .stripe-element {
+        background-color: #fff;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Payment Page: {{coffeeType}}</h1>
+
+    <form class="payment-form" id="payment-form">
+      <input
+        type="hidden"
+        id="coffeeType"
+        name="coffeeType"
+        value="{{ coffeeType }}"
+      />
+      <div class="input-group">
+        <label for="card-number-element">Card Number:</label>
+        <div id="card-number-element" class="stripe-element"></div>
+      </div>
+      <div class="input-group">
+        <label for="cvv-element">CVV:</label>
+        <div id="cvv-element" class="stripe-element"></div>
+      </div>
+      <div class="input-group">
+        <label for="date-element">Expiry Date:</label>
+        <div id="date-element" class="stripe-element"></div>
+      </div>
+
+      <div id="card-errors" role="alert"></div>
+
+      <button id="submit">Click to Make Payment</button>
+      <div id="paymentSuccessPopup" class="popup">
+        <div class="popup-content">
+          <span class="close" id="closePopup" style="color: black;">&times;</span>
+          <h2 style="color: black;">Payment Successful</h2>
+          <p style="color: black;">Your payment has been done successfully.</p>
+        </div>
+      </div>
+      <div id="payment-form-container"></div>
+      
+    </form>
+
+    <script>
+      document
+        .getElementById("submit")
+        .addEventListener("click", function () {
+          document.getElementById("paymentSuccessPopup").style.display = "block";
+        });
+
+      document
+        .getElementById("closePopup")
+        .addEventListener("click", function () {
+          document.getElementById("paymentSuccessPopup").style.display = "none";
+        });
+    </script>
+    <!-- Include Stripe.js and initialize Stripe -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const coffeeType = urlParams.get("coffeeType");
+        
+        // Create a Stripe instance with your publishable key
+        var stripe = Stripe(
+          ""
+        );
+
+        var elements = stripe.elements();
+
+        // Create separate instances of the Stripe elements
+        var cardNumberElement = elements.create("cardNumber");
+        var cvvElement = elements.create("cardCvc");
+        var dateElement = elements.create("cardExpiry");
+
+        // Mount the Stripe elements to their respective divs
+        cardNumberElement.mount("#card-number-element");
+        cvvElement.mount("#cvv-element");
+        dateElement.mount("#date-element");
+
+        var form = document.getElementById("payment-form");
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          document.getElementById("submit").disabled = true;
+
+          stripe
+            .createPaymentMethod({
+              type: "card",
+              card: cardNumberElement,
+            })
+            .then(function (result) {
+              if (result.error) {
+                var errorElement = document.getElementById("card-errors");
+                errorElement.textContent = result.error.message;
+
+                document.getElementById("submit").disabled = false;
+              } else {
+                setTimeout(function () {
+                  errorElement.textContent = "";
+                }, 500);
+                var coffeeType = document.getElementById("coffeeType").value;
+                console.log(coffeeType);
+                // Make an AJAX request to your server to complete the payment
+                fetch(`/payment?coffeeType=${coffeeType}`, {
+                  method: "POST",
+                  body: JSON.stringify({ coffeeType: coffeeType }),
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                }).then(function (responseJson) {
+                  if (responseJson.error) {
+                    var errorElement = document.getElementById("card-errors");
+                    errorElement.textContent = responseJson.error;
+                    console.log("HERE11R");
+
+                    document.getElementById("submit").disabled = false;
+                  } else {
+                    console.log("HERE222222211R");
+
+                    console.log("Payment successful:", responseJson);
+
+                    var paymentFormContainer = document.getElementById(
+                      "payment-form-container"
+                    );
+                    paymentFormContainer.innerHTML =
+                      "<h2>Thank you for your order!</h2>";
+                      setTimeout(function() {
+                        window.location.href = "http://127.0.0.1:5000/"; // Replace "/" with your desired URL
+                      }, 3000);
+                  }
+                });
+              }
+            });
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -6,7 +6,7 @@ import json
 import stripe
 
 app = Flask(__name__)
-stripe.api_key = 'YOUR KEY'
+stripe.api_key = ''
 
 cap = cv2.VideoCapture(0)
 cap.set(3, 320)
@@ -58,6 +58,7 @@ def payment():
     coffeeType = request.args.get('coffeeType')
 
     modeType = request.args.get('modeType')
+    imageSrc = request.args.get('imageSrc')
     # print(coffeeType, modeType)
     price_mapping = {
         "blackcoffee": 1000,  
@@ -101,7 +102,8 @@ def index():
     image_dir = 'static/images'  # Change this to your image directory
     image_list = os.listdir(image_dir)
     # selections_json = json.dumps(selections)
-    return render_template('test.html', image_list=image_list, selections=selections, modeType=modeType)
+    prices = [1000, 1200, 800, 500, 1100]
+    return render_template('test.html', image_list=image_list, selections=selections, modeType=modeType, prices=prices)
 
 def get_image_selection(fingers):
     global modeType

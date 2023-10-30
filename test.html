@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Cafe Vision Control</title>
+    <!-- Include Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <style>
+      body {
+        background-color: #222;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        height: 100vh;
+        margin: 0;
+      }
+
+      .camera {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 5px solid #007bff;
+        border-radius: 50%;
+        width: 200px;
+        height: 200px;
+        margin-bottom: 60px; /* Add margin to separate from the loader */
+        margin-top: 85px;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .selection-ui {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap; /* Ensure images stay in a horizontal row */
+      }
+
+      .image-options {
+        display: flex;
+        justify-content: center; /* Center the image options horizontally */
+      }
+      .coffee-item {
+        display: flex;
+        flex-direction: column;
+        margin: 10px;
+        padding: 10px;
+        border: 2px solid transparent;
+        border-radius: 10px;
+        transition: border-color 0.5s;
+        text-align: center;
+        cursor: pointer;
+      }
+      .coffee-item img {
+        max-width: 100px;
+      }
+      .selected-item {
+        border-color: #007bff;
+      }
+      .coffee-image {
+        display: block;
+      }
+      .loader-container {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 999; /* Ensure the loader is above other content */
+      }
+      .loader {
+        display: none;
+      }
+    </style>
+    <script>
+      function updateModeType() {
+        fetch("/get_mode_type")
+          .then((response) => response.json())
+          .then((data) => {
+            // Update the modeType displayed in the HTML
+            document.getElementById("modeTypeSpan").textContent =
+              data.modeType.toUpperCase();
+            // Update the selected coffee image based on the current modeType
+            var selectedCoffeeImage = document.getElementById(
+              "selected-coffee-image"
+            );
+
+            if (data.modeType === -1) {
+              // If modeType is -1, hide the selected coffee image
+              selectedCoffeeImage.style.display = "none";
+              data.modeType = "";
+              document.getElementById("modeTypeSpan").textContent =
+                data.modeType;
+            } else {
+              // Otherwise, display the selected coffee image
+              selectedCoffeeImage.style.display = "block";
+              selectedCoffeeImage.src = data.imageURL;
+
+              // Check if modeType has changed
+              if (data.modeType !== currentModeType) {
+                // Show the loader while loading
+                var loaderContainer =
+                  document.querySelector(".loader-container");
+                var loader = document.querySelector(".loader");
+                loaderContainer.style.display = "flex";
+                loader.style.display = "block";
+
+                // Call placeOrder with the new modeType
+                placeOrder(data.modeType);
+                currentModeType = data.modeType; // Update the current modeType
+              }
+            }
+          });
+      }
+
+      var currentModeType = -1; // Initialize currentModeType to -1
+
+      // Periodically update modeType
+      setInterval(updateModeType, 5000); // Update every 5 seconds (adjust as needed)
+
+      function placeOrder(coffeeType) {
+        var selectedCoffeeImage = document.getElementById("selected-coffee-image");
+        var orderMessage = document.getElementById("order-message");
+        var loaderContainer = document.querySelector(".loader-container");
+        var loader = document.querySelector(".loader");
+      
+        // Reset UI elements
+        selectedCoffeeImage.style.display = "none";
+        selectedCoffeeImage.src = "";
+        orderMessage.innerHTML = "";
+      
+        // Check if modeType is not -1
+        if (currentModeType !== -1) {
+          // Show the loader while loading
+          loaderContainer.style.display = "flex";
+          loader.style.display = "block";
+        }
+      
+        // Simulate a delay (you can adjust the time as needed)
+        setTimeout(function () {
+          // Hide the loader and display the selected coffee image
+          loaderContainer.style.display = "none";
+          loader.style.display = "none";
+          selectedCoffeeImage.style.display = "block";
+      
+          // Load the selected coffee image
+          selectedCoffeeImage.src = "/static/images/" + coffeeType.toLowerCase() + ".jpeg";
+      
+          // Show the order placed message
+          orderMessage.innerHTML = "Order Successful: " + coffeeType;
+          console.log(coffeeType);
+          redirectToPayment(coffeeType);
+          currentModeType = -1;
+        }, 2000); // Simulated delay of 2 seconds (adjust as needed)
+      }
+      
+
+      function redirectToPayment(coffeeType) {
+        // Redirect to the payment page (payment.html)
+        var selectedCoffeeImage = document.getElementById("selected-coffee-image");
+        var imageSrc = selectedCoffeeImage.src; // Get the selected image URL
+        window.location.href = `/payment?coffeeType=${coffeeType}&imageSrc=${imageSrc}`;
+      }
+    </script>
+  </head>
+  <body>
+    <div class="camera">
+      <img src="{{ url_for('video_feed') }}" alt="Hand Tracking Image" />
+    </div>
+
+    <span id="modeTypeSpan"></span>
+
+    <div class="container">
+      <div class="selection-ui">
+       
+        {% for option in selections %}
+        <div
+          class="coffee-item"
+          id="{{ option|lower|replace(' ', '-') }}"
+          onclick="placeOrder('{{ option }}')"
+        >
+          <img
+            src="/static/images/{{ option|lower|replace(' ', '-') }}.jpeg"
+            alt="{{ option }}"
+          />
+          <p>{{ option }}</p>
+          <p>Price: {{ prices[loop.index0] }}</p>
+  
+          <!-- <button class="pay-button" data-modeType="{{ option }}">Pay Now</button> -->
+        </div>
+        {% endfor %}
+      </div>
+      <!-- Add an <img> tag for the selected image -->
+      <img id="selected-coffee-image" src="" alt="Selected Coffee" />
+      <div class="loader-container" style="display: none;">
+        <!-- Bootstrap loader with loading bar and text -->
+        <div class="spinner-border text-primary loader" role="status" style="display: none;">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+      
+        <!-- <span>Loading...</span> -->
+      </div>
+      <div id="order-message"></div>
+    </div>
+  </body>
+</html>
