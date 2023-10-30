@@ -61,7 +61,8 @@
     </style>
   </head>
   <body>
-    <h1>Payment Page {{coffeeType}}</h1>
+    <h1>Payment Page: {{coffeeType}}</h1>
+
     <form class="payment-form" id="payment-form">
       <input
         type="hidden"
@@ -87,12 +88,13 @@
       <button id="submit">Click to Make Payment</button>
       <div id="paymentSuccessPopup" class="popup">
         <div class="popup-content">
-          <span class="close" id="closePopup">&times;</span>
-          <h2>Payment Successful</h2>
-          <p>Your payment has been done successfully.</p>
+          <span class="close" id="closePopup" style="color: black;">&times;</span>
+          <h2 style="color: black;">Payment Successful</h2>
+          <p style="color: black;">Your payment has been done successfully.</p>
         </div>
       </div>
       <div id="payment-form-container"></div>
+      
     </form>
 
     <script>
@@ -114,10 +116,10 @@
       document.addEventListener("DOMContentLoaded", function () {
         const urlParams = new URLSearchParams(window.location.search);
         const coffeeType = urlParams.get("coffeeType");
-
+        
         // Create a Stripe instance with your publishable key
         var stripe = Stripe(
-          "pk_test_51O57hNSIvsFPoooMTlrFgxiONAuEr35izWS6vDb2OMfVJ8V6x8mFejgyTNP1gDawgSspELQQFW1eWrc4RKwyQXLJ00MCNXFedV"
+          ""
         );
 
         var elements = stripe.elements();
@@ -179,6 +181,9 @@
                     );
                     paymentFormContainer.innerHTML =
                       "<h2>Thank you for your order!</h2>";
+                      setTimeout(function() {
+                        window.location.href = "http://127.0.0.1:5000/"; // Replace "/" with your desired URL
+                      }, 3000);
                   }
                 });
               }

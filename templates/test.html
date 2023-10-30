@@ -133,30 +133,33 @@
       setInterval(updateModeType, 5000); // Update every 5 seconds (adjust as needed)
 
       function placeOrder(coffeeType) {
-        var selectedCoffeeImage = document.getElementById(
-          "selected-coffee-image"
-        );
+        var selectedCoffeeImage = document.getElementById("selected-coffee-image");
         var orderMessage = document.getElementById("order-message");
-        var selectionUI = document.querySelector(".selection-ui"); // Get the selection UI container
-
+        var loaderContainer = document.querySelector(".loader-container");
+        var loader = document.querySelector(".loader");
+      
         // Reset UI elements
         selectedCoffeeImage.style.display = "none";
         selectedCoffeeImage.src = "";
         orderMessage.innerHTML = "";
-
+      
+        // Check if modeType is not -1
+        if (currentModeType !== -1) {
+          // Show the loader while loading
+          loaderContainer.style.display = "flex";
+          loader.style.display = "block";
+        }
+      
         // Simulate a delay (you can adjust the time as needed)
         setTimeout(function () {
           // Hide the loader and display the selected coffee image
-          var loaderContainer = document.querySelector(".loader-container");
-          var loader = document.querySelector(".loader");
           loaderContainer.style.display = "none";
           loader.style.display = "none";
           selectedCoffeeImage.style.display = "block";
-
+      
           // Load the selected coffee image
-          selectedCoffeeImage.src =
-            "/static/images/" + coffeeType.toLowerCase() + ".jpeg";
-
+          selectedCoffeeImage.src = "/static/images/" + coffeeType.toLowerCase() + ".jpeg";
+      
           // Show the order placed message
           orderMessage.innerHTML = "Order Successful: " + coffeeType;
           console.log(coffeeType);
@@ -164,10 +167,13 @@
           currentModeType = -1;
         }, 2000); // Simulated delay of 2 seconds (adjust as needed)
       }
+      
 
       function redirectToPayment(coffeeType) {
         // Redirect to the payment page (payment.html)
-        window.location.href = `/payment?coffeeType=${coffeeType}`;
+        var selectedCoffeeImage = document.getElementById("selected-coffee-image");
+        var imageSrc = selectedCoffeeImage.src; // Get the selected image URL
+        window.location.href = `/payment?coffeeType=${coffeeType}&imageSrc=${imageSrc}`;
       }
     </script>
   </head>
@@ -180,6 +186,7 @@
 
     <div class="container">
       <div class="selection-ui">
+       
         {% for option in selections %}
         <div
           class="coffee-item"
@@ -191,7 +198,7 @@
             alt="{{ option }}"
           />
           <p>{{ option }}</p>
-          <p>Price: {{ option}}</p>
+          <p>Price: {{ prices[loop.index0] }}</p>
   
           <!-- <button class="pay-button" data-modeType="{{ option }}">Pay Now</button> -->
         </div>
@@ -199,11 +206,13 @@
       </div>
       <!-- Add an <img> tag for the selected image -->
       <img id="selected-coffee-image" src="" alt="Selected Coffee" />
-      <div class="loader-container">
+      <div class="loader-container" style="display: none;">
         <!-- Bootstrap loader with loading bar and text -->
-        <div class="spinner-border text-primary loader" role="status">
-          <span class="sr-only">Loading...</span>
+        <div class="spinner-border text-primary loader" role="status" style="display: none;">
+            <span class="sr-only">Loading...</span>
         </div>
+    </div>
+      
         <!-- <span>Loading...</span> -->
       </div>
       <div id="order-message"></div>
